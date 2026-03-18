@@ -1,7 +1,10 @@
 name: Windows Environment Setup
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # للتشغيل اليدوي وقتما تحب
+  schedule:
+    # التشغيل التلقائي عند الدقيقة 0 من كل 4 ساعات
+    - cron: '0 */4 * * *'
 
 jobs:
   build:

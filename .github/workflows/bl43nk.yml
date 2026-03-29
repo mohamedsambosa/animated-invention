@@ -1,0 +1,75 @@
+name: Ultimate-Win10-CRD-Traffmonetizer-Optimized
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      
+      # -----------------------------------------------------------
+      # خطوة 1: تثبيت المتطلبات الأساسية (Chrome و CRD)
+      # -----------------------------------------------------------
+      - name: Install Prerequisites (Chrome, CRD)
+        shell: pwsh
+        run: |
+          Write-Host "⬇️ Downloading Chrome..."
+          Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile "chrome_installer.exe"
+          Start-Process -FilePath "chrome_installer.exe" -Args "/silent /install" -Wait
+          
+          Write-Host "⬇️ Downloading CRD Host..."
+          Invoke-WebRequest -Uri "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile "crd.msi"
+          Start-Process -FilePath "msiexec.exe" -Args "/i crd.msi /quiet /qn" -Wait
+          Write-Host "✅ Chrome and CRD Installed Successfully."
+
+      # -----------------------------------------------------------
+      # خطوة 2: تفعيل الريموت ديسكتوب (Chrome Remote Desktop)
+      # -----------------------------------------------------------
+      - name: Start Chrome Remote Desktop
+        shell: pwsh
+        env:
+          CRD_CODE: ${{ secrets.CRD_CODE2 }}
+          CRD_PIN: ${{ secrets.CRD_PIN }}
+        run: |
+          $exePath = "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
+          # إنشاء اسم فريد للجهاز بناءً على رقم المشغل
+          $UniqueName = "${{ github.actor }}-TM-Node"
+          
+          Write-Host "🚀 STARTING RDP SERVICE: $UniqueName"
+          if (Test-Path $exePath) {
+            & $exePath --code="$env:CRD_CODE" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="$UniqueName" --pin=$env:CRD_PIN
+          } else {
+            Write-Error "CRD Executable not found!"
+          }
+
+      # -----------------------------------------------------------
+      # خطوة 3: تحميل وتشغيل Traffmonetizer (النسخة الخفيفة CLI)
+      # -----------------------------------------------------------
+      - name: Setup and Run Traffmonetizer
+        shell: pwsh
+        run: |
+          Write-Host "⬇️ Downloading Traffmonetizer CLI..."
+          # استخدام نسخة الـ CLI لأنها الأفضل والأخف للعمل في الخلفية دون واجهة رسومية
+          $url = "https://traffmonetizer.com/download/cli/windows/x64/traffmonetizer.exe"
+          Invoke-WebRequest -Uri $url -OutFile "traff.exe"
+          
+          Write-Host "🚀 Starting Traffmonetizer with Token..."
+          # التشغيل في الخلفية باستخدام التوكن الخاص بك
+          Start-Process -FilePath ".\traff.exe" -ArgumentList "start", "accept", "--token", "JY7YikhHq5jyJO6weR0MXrzc/w0y2NxGC7Qm9LlvpVA=" -WindowStyle Hidden
+          
+          Write-Host "✅ Traffmonetizer is now running in the background."
+
+      # -----------------------------------------------------------
+      # خطوة 4: البقاء نشطاً لضمان استمرار الربح
+      # -----------------------------------------------------------
+      - name: Keep Alive
+        shell: pwsh
+        run: |
+          Write-Host "💰 System is running and earning..."
+          Write-Host "⏱️ Keep alive loop started (Max 6 hours for GitHub Actions)"
+          # حلقة تكرار لمنع توقف الـ Workflow
+          while ($true) { 
+            Get-Process traff | Select-Object -Property ProcessName, Id, CPU, WorkingSet
+            Start-Sleep -Seconds 300 
+          }

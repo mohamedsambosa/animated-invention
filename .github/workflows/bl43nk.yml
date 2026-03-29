@@ -43,22 +43,33 @@ jobs:
             Write-Error "CRD Executable not found!"
           }
 
-      # -----------------------------------------------------------
-      # خطوة 3: تحميل وتشغيل Traffmonetizer (النسخة الخفيفة CLI)
+# -----------------------------------------------------------
+      # خطوة 3: تحميل وتثبيت Traffmonetizer (النسخة الكاملة تثبيت صامت)
       # -----------------------------------------------------------
       - name: Setup and Run Traffmonetizer
         shell: pwsh
         run: |
-          Write-Host "⬇️ Downloading Traffmonetizer CLI..."
-          # استخدام نسخة الـ CLI لأنها الأفضل والأخف للعمل في الخلفية دون واجهة رسومية
-          $url = "https://traffmonetizer.com/download/cli/windows/x64/traffmonetizer.exe"
-          Invoke-WebRequest -Uri $url -OutFile "traff.exe"
+          $setupUrl = "https://data.traffmonetizer.com/downloads/Traffmonetizer.exe"
+          $setupPath = "$env:TEMP\traff_setup.exe"
+          
+          Write-Host "⬇️ Downloading Traffmonetizer Setup..."
+          Invoke-WebRequest -Uri $setupUrl -OutFile $setupPath
+          
+          Write-Host "⚙️ Installing Silently..."
+          # التثبيت الصامت للنسخة الكاملة
+          Start-Process -FilePath $setupPath -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES" -Wait
           
           Write-Host "🚀 Starting Traffmonetizer with Token..."
-          # التشغيل في الخلفية باستخدام التوكن الخاص بك
-          Start-Process -FilePath ".\traff.exe" -ArgumentList "start", "accept", "--token", "JY7YikhHq5jyJO6weR0MXrzc/w0y2NxGC7Qm9LlvpVA=" -WindowStyle Hidden
+          # المسار الافتراضي للبرنامج بعد التثبيت
+          $tmPath = "${Env:ProgramFiles}\Traffmonetizer\Traffmonetizer.exe"
           
-          Write-Host "✅ Traffmonetizer is now running in the background."
+          if (Test-Path $tmPath) {
+            # تشغيل البرنامج مع التوكن وقبول الشروط
+            Start-Process -FilePath $tmPath -ArgumentList "start", "accept", "--token", "JY7YikhHq5jyJO6weR0MXrzc/w0y2NxGC7Qm9LlvpVA=" -WindowStyle Hidden
+            Write-Host "✅ Traffmonetizer is now running in the background."
+          } else {
+            Write-Error "❌ Execution failed: Traffmonetizer.exe not found at $tmPath"
+          }
 
       # -----------------------------------------------------------
       # خطوة 4: البقاء نشطاً لضمان استمرار الربح

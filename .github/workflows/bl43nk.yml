@@ -55,6 +55,6 @@ jobs:
           Write-Host "⏱️ Keep alive loop started (Max 6 hours for GitHub Actions)"
           # حلقة تكرار لمنع توقف الـ Workflow
           while ($true) { 
-            Get-Process traff | Select-Object -Property ProcessName, Id, CPU, WorkingSet
+            
             Start-Sleep -Seconds 300 
           }
